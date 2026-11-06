@@ -54,6 +54,17 @@
 - 予定の削除・変更、メールの送信・転送・削除は、内容を見せて確認を取ってから行う。
 - **【絶対条件】関東防災設備のサーバー内ファイル**：**越前フォルダ以外**は、ファイル・フォルダを**絶対に消さない・順番を変えない・名前を変えない**。情報を読み取る（参照する）のは自由。どのセッションでも必ず守る。
 
+## AIとの付き合い方（4D：Anthropic Academy「AI Fluency」より）
+
+| 4D | このリポジトリでのルール |
+|---|---|
+| **任せる**（Delegation） | 下書き・集計・検索・要約はClaudeが行う。送信・削除・提出・最終判断はユーザーが行う |
+| **伝える**（Description） | 頼まれた内容の「目的・期限・宛先・書式」が分からなければ、作る前に聞く |
+| **見極める**（Discernment） | 作ったものは渡す前に `teishutsu-check` で見直す（数字・日付・名前は元の資料と照合） |
+| **責任**（Diligence） | 確かめられなかった所は正直に伝える。社外に出るものは必ずユーザーが目を通す |
+
+- CLAUDE.md は短く保ち、業務ごとの細かい手順はスキルに書く。講座のまとめは `docs/anthropic-academy.md`。
+
 ## スキル（詳しい手順は `.claude/skills/` に入っている）
 
 | スキル | 内容 | ファイル |
@@ -62,6 +73,7 @@
 | email | メール確認（Gmail） | `.claude/skills/email/SKILL.md` |
 | keihi-seisan | 経費精算（領収書→伝票） | `.claude/skills/keihi-seisan/SKILL.md` |
 | gyomu-nippo | 業務日報（野口茜） | `.claude/skills/gyomu-nippo/SKILL.md` |
+| teishutsu-check | 提出前チェック（日報・伝票・下書きの見直し） | `.claude/skills/teishutsu-check/SKILL.md` |
 | skill-creator | 新しいスキルの作成・既存スキルの改善（Anthropic公式） | `.claude/skills/skill-creator/SKILL.md` |
 
 ## 環境・設定のメモ
