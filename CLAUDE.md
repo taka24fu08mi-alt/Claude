@@ -25,6 +25,7 @@
 | email | メール確認（Gmail） | `.claude/skills/email/SKILL.md` |
 | keihi-seisan | 経費精算（領収書→伝票） | `.claude/skills/keihi-seisan/SKILL.md` |
 | gyomu-nippo | 業務日報（野口茜） | `.claude/skills/gyomu-nippo/SKILL.md` |
+| skill-creator | 新しいスキルの作成・既存スキルの改善（Anthropic公式） | `.claude/skills/skill-creator/SKILL.md` |
 
 ---
 
