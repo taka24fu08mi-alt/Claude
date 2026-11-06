@@ -30,3 +30,24 @@
 | CLAUDE.md「AIとの付き合い方（4D）」 | 任せる／伝える／見極める／責任 の4つのルール | AI Fluency 各講座 |
 | スキル `teishutsu-check` | 日報・伝票・メール下書きを渡す前の見直し表 | AI Fluency（見極め）、Claude Code in Action（検証用スキル） |
 | CLAUDE.md の書き方 | 短く保ち、細かい手順はスキルに分ける | Claude Code in Action、Introduction to agent skills |
+
+## 公式ドキュメントから取り入れたこと（2026年11月7日）
+
+講座の中身はログインが必要なため、同じ内容が載っている公開の公式ドキュメントを読んだ。
+
+| 読んだページ | 取り入れたこと | 反映先 |
+|---|---|---|
+| [CLAUDE.md の書き方](https://code.claude.com/docs/en/memory) | 200行以内にする・具体的に書く・矛盾するルールを残さない | CLAUDE.md |
+| [Claude Code のベストプラクティス](https://code.claude.com/docs/en/best-practices) | 2回直したことは書き残す・見直しチェックを用意する・例外を許さないルールはフックで強制する | CLAUDE.md、各スキルの「仕上げ」 |
+| [スキル作成のベストプラクティス](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) | 説明文に「何をするか」と「いつ使うか」を書く・短く書く・チェック表で見直す | 各スキル（今の説明文は条件を満たしている） |
+| [頼み方（プロンプト）のコツ](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | はっきり頼む・目的や理由を伝える・見本を見せる | 下の「頼み方のコツ」 |
+
+## 頼み方のコツ（越前さん用）
+
+| コツ | 例 |
+|---|---|
+| **目的を一言そえる** | 「元請への提出用だから、丁寧な書き方で」 |
+| **見本を渡す** | 「この過去物件の見積と同じ形式で」（サーバーのファイル名を伝える） |
+| **期限・宛先・書式を伝える** | 「月曜までに、東京消防庁の書式で、着工届の表紙を」 |
+| **ほしい形を指定する** | 「表にして」「3行で」「Excelで」 |
+| **2回同じことを直したら** | 「これを毎回のルールにして」と言えば、CLAUDE.md かスキルに追記する |
