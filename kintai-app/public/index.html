@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出退勤アプリ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>出退勤アプリ <small>試作</small></h1>
+  <div id="who"></div>
+</header>
+
+<main>
+  <!-- ログイン -->
+  <section id="login" hidden>
+    <h2>ログイン</h2>
+    <form id="loginForm">
+      <label>社員番号<input name="emp_no" autocomplete="username" required></label>
+      <label>パスワード<input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit">ログイン</button>
+      <p class="msg" id="loginMsg"></p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <nav id="tabs">
+      <button data-tab="punch" class="on">打刻</button>
+      <button data-tab="report">日報</button>
+      <button data-tab="timecard">タイムカード</button>
+      <button data-tab="admin" data-admin hidden>管理</button>
+    </nav>
+
+    <!-- 打刻 -->
+    <section id="tab-punch">
+      <p class="clock" id="clock">--:--</p>
+      <p id="punchState" class="state"></p>
+      <div class="big-buttons">
+        <button id="btnIn" class="in">出勤</button>
+        <button id="btnOut" class="out">退勤</button>
+      </div>
+      <p class="msg" id="punchMsg"></p>
+    </section>
+
+    <!-- 日報 -->
+    <section id="tab-report" hidden>
+      <form id="reportForm">
+        <label>日付<input type="date" name="date" required></label>
+        <p id="reportPunch" class="hint"></p>
+        <label>勤務区分<select name="kubun"></select></label>
+
+        <h3>業務内容 <small>（最大10行）</small></h3>
+        <p class="hint">客先欄に「休憩」と書くと、その時間を残業から引きます。</p>
+        <div id="items"></div>
+        <button type="button" id="addItem" class="sub">＋ 行を追加</button>
+
+        <h3>酒気帯び確認</h3>
+        <div class="grid2">
+          <label>運転前 確認時間<input name="al_before" placeholder="8:00"></label>
+          <label>運転後 確認時間<input name="al_after" placeholder="17:30"></label>
+          <label>車両No.<input name="al_car"></label>
+          <label>確認者<input name="al_checker"></label>
+          <label class="check"><input type="checkbox" name="al_device"> 検知器使用</label>
+          <label class="check"><input type="checkbox" name="al_ok"> 酒気帯びなし・体調良好</label>
+        </div>
+
+        <label>連絡事項・特記事項<textarea name="notes" rows="3"></textarea></label>
+        <button type="submit">保存</button>
+        <p class="msg" id="reportMsg"></p>
+      </form>
+    </section>
+
+    <!-- タイムカード -->
+    <section id="tab-timecard" hidden>
+      <div class="row">
+        <label>締め月<input type="month" id="tcPeriod"></label>
+        <label data-admin hidden>社員<select id="tcUser"></select></label>
+      </div>
+      <p id="tcTitle" class="hint"></p>
+      <div class="scroll">
+        <table id="tcTable">
+          <thead><tr>
+            <th>日付</th><th>出勤</th><th>退勤</th><th>区分</th>
+            <th>平日残業</th><th>平日深夜</th><th>休日残業</th><th>休日深夜</th>
+            <th>日計</th><th>累計</th><th>60h超え</th><th>日報</th>
+          </tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <p class="hint">締め期間は前月21日〜当月20日。土日を休日扱い（祝日は未対応）。30分単位で切り捨て。</p>
+    </section>
+
+    <!-- 管理 -->
+    <section id="tab-admin" hidden>
+      <h3>今日の出勤状況</h3>
+      <div class="scroll"><table id="todayTable"><thead><tr>
+        <th>社員番号</th><th>氏名</th><th>部署</th><th>出勤</th><th>退勤</th><th>区分</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <h3>打刻の修正</h3>
+      <form id="fixForm" class="grid2">
+        <label>社員<select name="user_id" id="fixUser"></select></label>
+        <label>日付<input type="date" name="date" required></label>
+        <label>出勤<input name="clock_in" placeholder="9:00"></label>
+        <label>退勤<input name="clock_out" placeholder="17:30"></label>
+        <button type="submit">修正</button>
+      </form>
+      <p class="msg" id="fixMsg"></p>
+
+      <h3>社員の登録</h3>
+      <form id="userForm" class="grid2">
+        <label>社員番号<input name="emp_no" required></label>
+        <label>氏名<input name="name" required></label>
+        <label>部署<input name="dept"></label>
+        <label>権限<select name="role"><option value="employee">社員</option><option value="admin">管理者</option></select></label>
+        <label>初期パスワード<input name="password" minlength="8" required></label>
+        <button type="submit">登録</button>
+      </form>
+      <p class="msg" id="userMsg"></p>
+    </section>
+
+    <section id="pwBox">
+      <details>
+        <summary>パスワード変更・ログアウト</summary>
+        <form id="pwForm" class="grid2">
+          <label>今のパスワード<input name="current" type="password" required></label>
+          <label>新しいパスワード<input name="next" type="password" minlength="8" required></label>
+          <button type="submit">変更</button>
+        </form>
+        <p class="msg" id="pwMsg"></p>
+        <button id="logout" class="sub">ログアウト</button>
+      </details>
+    </section>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
