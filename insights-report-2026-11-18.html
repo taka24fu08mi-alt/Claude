@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Claude Code Insights</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #334155; line-height: 1.65; padding: 48px 24px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    h2 { font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 48px; margin-bottom: 16px; }
+    .subtitle { color: #64748b; font-size: 15px; margin-bottom: 32px; }
+    .nav-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 32px 0; padding: 16px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .nav-toc a { font-size: 12px; color: #64748b; text-decoration: none; padding: 6px 12px; border-radius: 6px; background: #f1f5f9; transition: all 0.15s; }
+    .nav-toc a:hover { background: #e2e8f0; color: #334155; }
+    .stats-row { display: flex; gap: 24px; margin-bottom: 40px; padding: 20px 0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+    .at-a-glance { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+    .glance-title { font-size: 16px; font-weight: 700; color: #92400e; margin-bottom: 16px; }
+    .glance-sections { display: flex; flex-direction: column; gap: 12px; }
+    .glance-section { font-size: 14px; color: #78350f; line-height: 1.6; }
+    .glance-section strong { color: #92400e; }
+    .see-more { color: #b45309; text-decoration: none; font-size: 13px; white-space: nowrap; }
+    .see-more:hover { text-decoration: underline; }
+    .auto-mode-card { background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%); border: 1px solid #60a5fa; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+    .auto-mode-title { font-size: 16px; font-weight: 700; color: #1e40af; margin-bottom: 10px; }
+    .auto-mode-desc { font-size: 14px; color: #1e3a8a; line-height: 1.6; }
+    .auto-mode-desc code { background: rgba(255,255,255,0.7); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+    .auto-mode-note { font-size: 13px; color: #1e3a8a; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 6px; margin-top: 10px; }
+    .auto-mode-fineprint { font-size: 11px; color: #3b82f6; margin-top: 10px; }
+    .project-areas { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .project-area { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .area-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .area-name { font-weight: 600; font-size: 15px; color: #0f172a; }
+    .area-count { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
+    .area-desc { font-size: 14px; color: #475569; line-height: 1.5; }
+    .narrative { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+    .narrative p { margin-bottom: 12px; font-size: 14px; color: #475569; line-height: 1.7; }
+    .key-insight { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 14px; color: #166534; }
+    .section-intro { font-size: 14px; color: #64748b; margin-bottom: 16px; }
+    .big-wins { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .big-win { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; }
+    .big-win-title { font-weight: 600; font-size: 15px; color: #166534; margin-bottom: 8px; }
+    .big-win-desc { font-size: 14px; color: #15803d; line-height: 1.5; }
+    .friction-categories { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .friction-category { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px; }
+    .friction-title { font-weight: 600; font-size: 15px; color: #991b1b; margin-bottom: 6px; }
+    .friction-desc { font-size: 13px; color: #7f1d1d; margin-bottom: 10px; }
+    .friction-examples { margin: 0 0 0 20px; font-size: 13px; color: #334155; }
+    .friction-examples li { margin-bottom: 4px; }
+    .claude-md-section { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .claude-md-section h3 { font-size: 14px; font-weight: 600; color: #1e40af; margin: 0 0 12px 0; }
+    .claude-md-actions { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #dbeafe; }
+    .copy-all-btn { background: #2563eb; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .copy-all-btn:hover { background: #1d4ed8; }
+    .copy-all-btn.copied { background: #16a34a; }
+    .claude-md-item { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding: 10px 0; border-bottom: 1px solid #dbeafe; }
+    .claude-md-item:last-child { border-bottom: none; }
+    .cmd-checkbox { margin-top: 2px; }
+    .cmd-code { background: white; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #1e40af; border: 1px solid #bfdbfe; font-family: monospace; display: block; white-space: pre-wrap; word-break: break-word; flex: 1; }
+    .cmd-why { font-size: 12px; color: #64748b; width: 100%; padding-left: 24px; margin-top: 4px; }
+    .features-section, .patterns-section { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+    .feature-card { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; }
+    .pattern-card { background: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 8px; padding: 16px; }
+    .feature-title, .pattern-title { font-weight: 600; font-size: 15px; color: #0f172a; margin-bottom: 6px; }
+    .feature-oneliner { font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .pattern-summary { font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .feature-why, .pattern-detail { font-size: 13px; color: #334155; line-height: 1.5; }
+    .feature-examples { margin-top: 12px; }
+    .feature-example { padding: 8px 0; border-top: 1px solid #d1fae5; }
+    .feature-example:first-child { border-top: none; }
+    .example-code-row { display: flex; align-items: flex-start; gap: 8px; }
+    .example-code { flex: 1; background: #f1f5f9; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; overflow-x: auto; white-space: pre-wrap; }
+    .copyable-prompt-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .copyable-prompt-row { display: flex; align-items: flex-start; gap: 8px; }
+    .copyable-prompt { flex: 1; background: #f8fafc; padding: 10px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; border: 1px solid #e2e8f0; white-space: pre-wrap; line-height: 1.5; }
+    .pattern-prompt { background: #f8fafc; padding: 12px; border-radius: 6px; margin-top: 12px; border: 1px solid #e2e8f0; }
+    .pattern-prompt code { font-family: monospace; font-size: 12px; color: #334155; display: block; white-space: pre-wrap; margin-bottom: 8px; }
+    .prompt-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 6px; }
+    .copy-btn { background: #e2e8f0; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #475569; flex-shrink: 0; }
+    .copy-btn:hover { background: #cbd5e1; }
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+    .chart-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .chart-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 12px; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 6px; }
+    .bar-label { width: 100px; font-size: 11px; color: #475569; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; margin: 0 8px; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .bar-value { width: 28px; font-size: 11px; font-weight: 500; color: #64748b; text-align: right; }
+    .empty { color: #94a3b8; font-size: 13px; }
+    .horizon-section { display: flex; flex-direction: column; gap: 16px; }
+    .horizon-card { background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 16px; }
+    .horizon-title { font-weight: 600; font-size: 15px; color: #5b21b6; margin-bottom: 8px; }
+    .horizon-possible { font-size: 14px; color: #334155; margin-bottom: 10px; line-height: 1.5; }
+    .horizon-tip { font-size: 13px; color: #6b21a8; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 4px; }
+    .feedback-header { margin-top: 48px; color: #64748b; font-size: 16px; }
+    .feedback-intro { font-size: 13px; color: #94a3b8; margin-bottom: 16px; }
+    .feedback-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .feedback-card.team-card { background: #eff6ff; border-color: #bfdbfe; }
+    .feedback-card.model-card { background: #faf5ff; border-color: #e9d5ff; }
+    .feedback-title { font-weight: 600; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
+    .feedback-detail { font-size: 13px; color: #475569; line-height: 1.5; }
+    .feedback-evidence { font-size: 12px; color: #64748b; margin-top: 8px; }
+    .fun-ending { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24; border-radius: 12px; padding: 24px; margin-top: 40px; text-align: center; }
+    .fun-headline { font-size: 18px; font-weight: 600; color: #78350f; margin-bottom: 8px; }
+    .fun-detail { font-size: 14px; color: #92400e; }
+    .collapsible-section { margin-top: 16px; }
+    .collapsible-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .collapsible-header h3 { margin: 0; font-size: 14px; font-weight: 600; color: #475569; }
+    .collapsible-arrow { font-size: 12px; color: #94a3b8; transition: transform 0.2s; }
+    .collapsible-content { display: none; padding-top: 16px; }
+    .collapsible-content.open { display: block; }
+    .collapsible-header.open .collapsible-arrow { transform: rotate(90deg); }
+    @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } .stats-row { justify-content: center; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Claude Code Insights</h1>
+    <p class="subtitle">7 messages across 1 session | 2026-11-18 to 2026-11-18</p>
+
+    
+    <div class="at-a-glance">
+      <div class="glance-title">At a Glance</div>
+      <div class="glance-sections">
+        <div class="glance-section"><strong>What's working:</strong> You set things up like a coordinator. You named this the master session, gave Claude an explicit role up front, and had it pull together a cross-session progress snapshot instead of checking each workstream by hand. That hub-and-spoke habit is a good foundation for running parallel work, and it kept the conversation on oversight rather than drifting into implementation details. <a href="#section-wins" class="see-more">Impressive Things You Did →</a></div>
+        <div class="glance-section"><strong>What's hindering you:</strong> On Claude&apos;s side, the first status report stated things with too much confidence. It labeled UTC times as Japan time, and it said a desktop save hadn&apos;t happened when its source output had actually been cut off. Claude caught both mistakes itself, but only after the fact. On your side, there isn&apos;t much standing context yet, such as your timezone or how you want uncertain results flagged, so Claude falls back on defaults that don&apos;t match your locale or how carefully you want status checked. <a href="#section-friction" class="see-more">Where Things Go Wrong →</a></div>
+        <div class="glance-section"><strong>Quick wins to try:</strong> Save your &apos;master session status check&apos; as a Custom Skill so one /command lists sessions, converts times to JST, and separates confirmed facts from unverified ones. You could also add a session-start Hook that runs your standard status script automatically, giving every master session a fresh snapshot without you asking. A short CLAUDE.md note like &apos;report all times in JST and flag truncated output&apos; would prevent both errors from this session. <a href="#section-features" class="see-more">Features to Try →</a></div>
+        <div class="glance-section"><strong>Ambitious workflows:</strong> As models improve, your master session can go from reporting status to actually orchestrating. It could hand tasks to parallel worker sessions, check on them on a schedule, and reassign work when a session stalls, only coming back to you for real decisions. Get ready by having workers report objective signals, such as passing tests, commits, and file timestamps with sources, instead of self-described progress, so the master&apos;s view is trustworthy enough to act on unattended. <a href="#section-horizon" class="see-more">On the Horizon →</a></div>
+      </div>
+    </div>
+    
+
+    
+
+    <nav class="nav-toc">
+      <a href="#section-work">What You Work On</a>
+      <a href="#section-usage">How You Use CC</a>
+      <a href="#section-wins">Impressive Things</a>
+      <a href="#section-friction">Where Things Go Wrong</a>
+      <a href="#section-features">Features to Try</a>
+      <a href="#section-patterns">New Usage Patterns</a>
+      <a href="#section-horizon">On the Horizon</a>
+      <a href="#section-feedback">Team Feedback</a>
+    </nav>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value">7</div><div class="stat-label">Messages</div></div>
+      <div class="stat"><div class="stat-value">+0/-0</div><div class="stat-label">Lines</div></div>
+      <div class="stat"><div class="stat-value">0</div><div class="stat-label">Files</div></div>
+      <div class="stat"><div class="stat-value">1</div><div class="stat-label">Days</div></div>
+      <div class="stat"><div class="stat-value">7</div><div class="stat-label">Msgs/Day</div></div>
+    </div>
+
+    
+    <h2 id="section-work">What You Work On</h2>
+    <div class="project-areas">
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Multi-Session Orchestration &amp; Role Setup</span>
+            <span class="area-count">~1 session</span>
+          </div>
+          <div class="area-desc">The user designated this session as the master session to coordinate other Claude Code sessions. Claude used the claude-code-remote MCP list_sessions tool to find the active sessions, which set up a hub-and-spoke workflow.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Project Progress &amp; Status Reporting</span>
+            <span class="area-count">~1 session</span>
+          </div>
+          <div class="area-desc">The user asked for an overview of project progress across sessions. Claude found the relevant sessions quickly and summarized their status. The goal was mostly achieved, but the first report needed corrections.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Report Accuracy &amp; Self-Correction (Timezones, Save Status)</span>
+            <span class="area-count">~1 session</span>
+          </div>
+          <div class="area-desc">Claude&apos;s first status report presented UTC timestamps as Japan time. It also said a desktop save hadn&apos;t happened, when the source output had actually been truncated. Claude caught and corrected both errors itself, which suggests that converting timezones and checking for truncated output should be explicit steps. Note: all areas here come from a single 7-message session, so there wasn&apos;t enough data to support 4-5 distinct project areas.</div>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">What You Wanted</div>
+        <div class="bar-row">
+        <div class="bar-label">Session Setup Role Assignment</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Project Status Overview</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top Tools Used</div>
+        <div class="bar-row">
+        <div class="bar-label">Mcp  Claude-Code-Remote  List Sessions</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#0891b2"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Bash</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#0891b2"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Languages</div>
+        <p class="empty">No data</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Session Types</div>
+        <div class="bar-row">
+        <div class="bar-label">Multi Task</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-usage">How You Use Claude Code</h2>
+    <div class="narrative">
+      <p>With only <strong>one short session (7 messages over about an hour)</strong> to go on, this is a narrow snapshot rather than a full picture. Still, what&apos;s here suggests you use Claude Code as an <strong>orchestration hub rather than a hands-on coding tool</strong>. You opened by making this the &apos;master&apos; session and asked for a progress overview across your work. Claude responded by listing your remote sessions and checking things via Bash. There were no file edits, no commits, and no language-specific work. The pattern points toward <strong>coordinating multiple parallel Claude sessions from a central control point</strong>, with you supervising at the project level rather than steering line-by-line implementation.</p>
+<p>Your instructions appear <strong>brief and role-oriented</strong>. You assigned Claude a position (master session) and a goal (report status) rather than writing a detailed spec. No standing instructions or preferences were captured. That leaves Claude to infer details like timezone and how to read session state, and this is where friction showed up. <strong>The first status report showed UTC timestamps as if they were Japan time. It also said a desktop save hadn&apos;t happened when the source was actually truncated.</strong> Claude caught and corrected both errors itself. No reaction from you was recorded, so it&apos;s unclear whether you noticed, accepted the fix quietly, or moved on.</p>
+<p>The session was rated mostly achieved and likely satisfactory, and the session lookup itself was quick and accurate. If this orchestration style is how you usually work, a little upfront context would help. <strong>Stating your timezone (JST) and how you want ambiguous or truncated session state reported</strong> would make these overviews more reliable. Right now you seem willing to <strong>let Claude run and self-correct</strong> instead of interrupting. That works, but it means accuracy gaps in status reports could go unchallenged.</p>
+      <div class="key-insight"><strong>Key pattern:</strong> In this single session, you used Claude as a central &apos;master&apos; coordinator for status checks across sessions, giving short role-based instructions and letting Claude run and correct its own reporting errors without stepping in.</div>
+    </div>
+    
+
+    <!-- Response Time Distribution -->
+    <div class="chart-card" style="margin: 24px 0;">
+      <div class="chart-title">User Response Time Distribution</div>
+      <div class="bar-row">
+        <div class="bar-label">2-10s</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">10-30s</div>
+        <div class="bar-track"><div class="bar-fill" style="width:50%;background:#6366f1"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">30s-1m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">1-2m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">2-5m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">5-15m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">>15m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#6366f1"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
+        Median: 1961.3s &bull; Average: 1316.3s
+      </div>
+    </div>
+
+    <!-- Multi-clauding Section (matching Python reference) -->
+    <div class="chart-card" style="margin: 24px 0;">
+      <div class="chart-title">Multi-Clauding (Parallel Sessions)</div>
+      
+        <p style="font-size: 14px; color: #64748b; padding: 8px 0;">
+          No parallel session usage detected. You typically work with one Claude Code session at a time.
+        </p>
+      
+    </div>
+
+    <!-- Time of Day & Tool Errors -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title" style="display: flex; align-items: center; gap: 12px;">
+          User Messages by Time of Day
+          <select id="timezone-select" style="font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <option value="0">PT (UTC-8)</option>
+            <option value="3">ET (UTC-5)</option>
+            <option value="8">London (UTC)</option>
+            <option value="9">CET (UTC+1)</option>
+            <option value="17">Tokyo (UTC+9)</option>
+            <option value="custom">Custom offset...</option>
+          </select>
+          <input type="number" id="custom-offset" placeholder="UTC offset" style="display: none; width: 80px; font-size: 12px; padding: 4px; border-radius: 4px; border: 1px solid #e2e8f0;">
+        </div>
+        <div id="hour-histogram">
+      <div class="bar-row">
+        <div class="bar-label">Morning (6-12)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">4</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Afternoon (12-18)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:75%;background:#8b5cf6"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Evening (18-24)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Night (0-6)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div>
+        <div class="bar-value">0</div>
+      </div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Tool Errors Encountered</div>
+        <p class="empty">No tool errors</p>
+      </div>
+    </div>
+
+    
+    <h2 id="section-wins">Impressive Things You Did</h2>
+    <p class="section-intro">This covers one short session on 2026-11-18. You used Claude as a master coordinator to set up roles and get a status overview of your parallel work.</p>
+    <div class="big-wins">
+      
+        <div class="big-win">
+          <div class="big-win-title">Master Session for Orchestration</div>
+          <div class="big-win-desc">You named one session the master and used it to get an overview of the others. Instead of checking each session by hand, you had Claude list the active sessions and summarize where each one stood. This hub-and-spoke setup is a scalable way to manage parallel workstreams.</div>
+        </div>
+      
+        <div class="big-win">
+          <div class="big-win-title">Assigning Explicit Session Roles</div>
+          <div class="big-win-desc">You opened by assigning Claude a clear role before asking for anything else. Defining the session&apos;s purpose up front tells Claude to act as a coordinator rather than an individual contributor. That kept the conversation focused on oversight instead of drifting into implementation details.</div>
+        </div>
+      
+        <div class="big-win">
+          <div class="big-win-title">Fast Status Checks with Remote Tools</div>
+          <div class="big-win-desc">You used the remote session-listing tool together with a quick shell check to get a project-wide snapshot in a handful of messages. The search was fast and found the right sources. Be careful with the details, though: the first report showed UTC times as Japan time and said a desktop save hadn&apos;t happened when the source was actually truncated. Claude corrected both itself, but for status reports like this it&apos;s worth asking Claude to state its timezone and say when it can&apos;t verify something.</div>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">What Helped Most (Claude's Capabilities)</div>
+        <div class="bar-row">
+        <div class="bar-label">Fast/Accurate Search</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#16a34a"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Outcomes</div>
+        <div class="bar-row">
+        <div class="bar-label">Mostly Achieved</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-friction">Where Things Go Wrong</h2>
+    <p class="section-intro">With only one short session to go on, your friction centers on a single inaccurate status report: Claude mislabeled timestamps and overstated what it knew from truncated data, then had to correct itself.</p>
+    <div class="friction-categories">
+      
+        <div class="friction-category">
+          <div class="friction-title">Timezone assumptions in status reports</div>
+          <div class="friction-desc">Claude presented UTC timestamps as if they were Japan time, which made the progress overview misleading until it corrected itself. You could state your timezone up front, for example in a CLAUDE.md note like &apos;report all times in JST,&apos; so you don&apos;t have to rely on Claude catching the error.</div>
+          <ul class="friction-examples"><li>Your first progress report from the master session listed session times in UTC but labeled them as Japan time, which misrepresented when work happened.</li><li>Because no timezone instruction was captured, Claude had nothing to check its output against, and you needed a follow-up correction before the timeline could be trusted.</li></ul>
+        </div>
+      
+        <div class="friction-category">
+          <div class="friction-title">Confident conclusions drawn from truncated data</div>
+          <div class="friction-desc">Claude said a desktop save hadn&apos;t happened when the source it was reading had actually been cut off, so the absence of evidence was treated as evidence of absence. You could ask Claude to flag when its source output is incomplete and to mark statuses as &apos;unverified&apos; instead of definitive.</div>
+          <ul class="friction-examples"><li>The initial report said a desktop save hadn&apos;t happened, but the underlying output was truncated, so the claim wasn&apos;t supported by what Claude had actually seen.</li><li>Claude only retracted the save-status claim in a self-issued correction. Had you acted on the first report, you might have redone or worried about work that was possibly already saved.</li></ul>
+        </div>
+      
+        <div class="friction-category">
+          <div class="friction-title">Unverified first-pass summaries in coordination sessions</div>
+          <div class="friction-desc">When you set up a master session for a status overview, the first summary came back quickly but was only partly accurate (outcome: mostly achieved). For multi-session coordination, you could ask Claude to double-check its report before presenting it, or request a short list of uncertainties along with the summary.</div>
+          <ul class="friction-examples"><li>After you assigned the master-session role and asked for progress, the session listing was fast, but the summary built on it contained two errors that needed correcting in the same session.</li><li>No user reaction to the correction was recorded, so it&apos;s unclear whether the corrected status was what you needed. Asking for an explicit &apos;confidence/caveats&apos; line would make gaps like this visible immediately.</li></ul>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Primary Friction Types</div>
+        <div class="bar-row">
+        <div class="bar-label">Inaccurate Report</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#dc2626"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Inferred Satisfaction (model-estimated)</div>
+        <div class="bar-row">
+        <div class="bar-label">Likely Satisfied</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#eab308"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+    </div>
+
+    
+    
+    <h2 id="section-features">Existing CC Features to Try</h2>
+    <div class="claude-md-section">
+      <h3>Suggested CLAUDE.md Additions</h3>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code to add it to your CLAUDE.md.</p>
+      <div class="claude-md-actions">
+        <button class="copy-all-btn" onclick="copyAllCheckedClaudeMd()">Copy All Checked</button>
+      </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-0" class="cmd-checkbox" checked data-text="Add near the top of CLAUDE.md under a new &apos;## Time &amp; Locale&apos; section so it applies to every status report.\n\n## Time &amp; Locale
+- The user is in Japan. Always show times in JST (UTC+9). If a source timestamp is in UTC, convert it and label it explicitly, e.g. &apos;14:30 JST (05:30 UTC)&apos;.">
+          <label for="cmd-0">
+            <code class="cmd-code">## Time &amp; Locale
+- The user is in Japan. Always show times in JST (UTC+9). If a source timestamp is in UTC, convert it and label it explicitly, e.g. &apos;14:30 JST (05:30 UTC)&apos;.</code>
+            <button class="copy-btn" onclick="copyCmdItem(0)">Copy</button>
+          </label>
+          <div class="cmd-why">In the only analyzed session, Claude&apos;s first progress report showed UTC times as if they were Japan time and later had to correct itself.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-1" class="cmd-checkbox" checked data-text="Add under a &apos;## Status Reporting&apos; or &apos;## Master Session Duties&apos; section.\n\n## Status Reporting
+- When reporting on another session&apos;s state (e.g., whether a save or desktop write happened), first check whether the source output was truncated. If it was truncated or incomplete, say &apos;unknown / output truncated&apos;. Do not conclude that the action did not happen.">
+          <label for="cmd-1">
+            <code class="cmd-code">## Status Reporting
+- When reporting on another session&apos;s state (e.g., whether a save or desktop write happened), first check whether the source output was truncated. If it was truncated or incomplete, say &apos;unknown / output truncated&apos;. Do not conclude that the action did not happen.</code>
+            <button class="copy-btn" onclick="copyCmdItem(1)">Copy</button>
+          </label>
+          <div class="cmd-why">Claude reported that a desktop save hadn&apos;t happened when the session output had actually been cut off, which made the report inaccurate.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-2" class="cmd-checkbox" checked data-text="Add as a &apos;## Master Session Role&apos; section; you can move it into a custom skill later (see features_to_try).\n\n## Master Session Role
+- When asked to act as the master session, list all sessions via the claude-code-remote MCP and give a table with: session name, current task, last activity time (JST), and status (done / in progress / blocked / unknown). Mark any field you could not verify as &apos;unverified&apos;.">
+          <label for="cmd-2">
+            <code class="cmd-code">## Master Session Role
+- When asked to act as the master session, list all sessions via the claude-code-remote MCP and give a table with: session name, current task, last activity time (JST), and status (done / in progress / blocked / unknown). Mark any field you could not verify as &apos;unverified&apos;.</code>
+            <button class="copy-btn" onclick="copyCmdItem(2)">Copy</button>
+          </label>
+          <div class="cmd-why">The session started with role assignment and a project overview, and a fixed report format would make that repeatable and reduce errors from guessing.</div>
+        </div>
+      
+    </div>
+    
+    
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code and it'll set it up for you.</p>
+    <div class="features-section">
+      
+        <div class="feature-card">
+          <div class="feature-title">Custom Skills</div>
+          <div class="feature-oneliner">Save a reusable prompt as a markdown file and run it with a single /command.</div>
+          <div class="feature-why"><strong>Why for you:</strong> You are using one session as a coordinator for the others. A /status skill would produce the same reliable progress report every time, with JST conversion and truncation checks built in, so you don&apos;t have to re-explain the role.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">mkdir -p .claude/skills/status &amp;&amp; cat &gt; .claude/skills/status/SKILL.md &lt;&lt; &apos;EOF&apos;
+---
+name: status
+description: Master-session progress report across all Claude Code sessions
+---
+1. Call mcp__claude-code-remote__list_sessions.
+2. For each session, give its name, current task, last activity (convert to JST, UTC+9, and label it), and status.
+3. If any session output is truncated or ambiguous, mark that field &apos;unverified&apos;. Do not infer that something failed.
+4. End with: blockers, next recommended actions, and anything that needs my decision.
+EOF</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="feature-card">
+          <div class="feature-title">Hooks</div>
+          <div class="feature-oneliner">Run shell commands automatically at lifecycle events such as session start.</div>
+          <div class="feature-why"><strong>Why for you:</strong> A SessionStart hook can put the current JST time into context at the start of each session. Claude then has a correct reference point and is less likely to mix up UTC and Japan time in reports.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">{
+  &quot;hooks&quot;: {
+    &quot;SessionStart&quot;: [
+      {
+        &quot;hooks&quot;: [
+          { &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;echo \&quot;Current time: $(TZ=Asia/Tokyo date &apos;+%Y-%m-%d %H:%M JST&apos;)\&quot;&quot; }
+        ]
+      }
+    ]
+  }
+}</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="feature-card">
+          <div class="feature-title">Headless Mode</div>
+          <div class="feature-oneliner">Run Claude non-interactively from scripts or cron.</div>
+          <div class="feature-why"><strong>Why for you:</strong> If you regularly check on multiple sessions, you could produce a status digest on a schedule without opening a master session each time.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">claude -p &quot;/status&quot; --allowedTools &quot;mcp__claude-code-remote__list_sessions,Bash&quot; &gt; ~/session-status-$(TZ=Asia/Tokyo date +%Y%m%d-%H%M).md</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+    </div>
+    
+    
+    <h2 id="section-patterns">New Ways to Use Claude Code</h2>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code and it'll walk you through it.</p>
+    <div class="patterns-section">
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Ask for verified facts, not inferences</div>
+          <div class="pattern-summary">When requesting status reports, tell Claude to separate what it confirmed from what it inferred.</div>
+          <div class="pattern-detail">Your one session went mostly well, with fast and accurate session lookup. The two errors (timezone and save status) both came from Claude filling gaps with assumptions. Asking for a &apos;confirmed vs. inferred&apos; split brings that uncertainty to the surface right away, instead of Claude having to correct itself later. This matters most in a master-session role, where you depend on the summary instead of checking each session yourself.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">You are the master session. List all sessions and summarize progress in a table with times in JST. For each item, mark it as CONFIRMED (seen directly in output) or INFERRED. If any output was truncated, say so explicitly.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Have Claude self-check before reporting</div>
+          <div class="pattern-summary">Add a quick verification step before the final summary.</div>
+          <div class="pattern-detail">Claude caught its own mistakes, but only after giving you an incorrect report first. Asking it to check timestamps and completeness before answering moves that correction ahead of the report. One extra sentence in the prompt costs very little and avoids misleading summaries.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Before giving me the final report, double-check: (1) every time is converted to JST, (2) no conclusion relies on truncated output. Then give the report.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Build more history before optimizing heavily</div>
+          <div class="pattern-summary">With only one short session analyzed, set up the basics (CLAUDE.md locale and reporting rules) and check again after more use.</div>
+          <div class="pattern-detail">This analysis covers a single session with 7 messages, so no instructions repeated across sessions yet. The timezone and truncation rules address the friction actually observed. Further patterns, such as how you split work across sessions, will be clearer after a week or two of the master-session workflow.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Read CLAUDE.md and confirm you&apos;ll follow the Time &amp; Locale and Status Reporting rules, then give me the current project status across all sessions.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+    </div>
+    
+    
+
+    
+    <h2 id="section-horizon">On the Horizon</h2>
+    <p class="section-intro">AI-assisted development is shifting from single chat sessions to a coordinating master agent that runs, monitors, and checks the work of many parallel sub-sessions.</p>
+    <div class="horizon-section">
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Master Session Orchestrating Parallel Worker Agents</div>
+          <div class="horizon-possible">Your master session could do more than report status. It could hand tasks to several remote Claude sessions running in parallel, check their progress on a schedule, and assign new work to sessions that finish or stall. A whole project milestone could then move forward unattended, with the master only coming back to you when a decision is needed.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Use the claude-code-remote MCP tools (list_sessions plus any send or spawn tools) with a CLAUDE.md that defines the master&apos;s role, the worker roles, and the handoff rules. Use git worktrees so each worker has its own isolated branch.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>You are the MASTER session for this project. First, call list_sessions and build a table of every active session: its role, current task, last activity time (converted to JST, UTC+9, and labeled explicitly), and whether its latest work is committed or saved. Next, read the project&apos;s TODO or roadmap and split the remaining work into independent tasks that can run in parallel. Assign each task to an idle session or propose a new worker session for it, with a clear goal, the files in scope, and a definition of done that includes passing tests. Check on progress periodically. When a worker finishes, verify its output yourself (run its tests, read its diff) before marking the task complete. Escalate to me only for architectural decisions or repeated failures.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Self-Verifying Status Reports With Evidence</div>
+          <div class="horizon-possible">The friction in this session came from a report that stated things as fact (times, save status) without checking them. A verification-first reporting workflow could require every status claim to come with a source, such as a git log line, a file timestamp, or tool output. Ambiguous data, like truncated text, would be flagged as &apos;unverified&apos; instead of guessed. The reports would then be trustworthy enough to act on without re-checking.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Add a reporting rule to CLAUDE.md that every claim must cite the command output it came from. Have Claude use Bash (git log, ls -la, date) to confirm saves and timestamps before reporting.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>Generate a project progress report, but follow these verification rules strictly: (1) Before you write anything, run `date` and `TZ=Asia/Tokyo date` to establish the current time in both UTC and JST. Show every timestamp in JST with the label &apos;JST&apos;. (2) For each session or workstream, confirm its save or commit status with real commands (git status, git log -5 --format=&apos;%h %ad %s&apos; --date=iso, ls -la on the relevant files). Never infer status from summaries alone. (3) If any source data is truncated, missing, or ambiguous, mark that claim as UNVERIFIED and explain what is missing. Do not guess. (4) End the report with a &apos;Confidence&apos; section listing which claims are verified and which are inferred. Then reread your own report once and correct any claim that is not backed by command output.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Autonomous Test-Driven Worker Loops</div>
+          <div class="horizon-possible">Instead of the master asking each worker &apos;how&apos;s it going?&apos;, workers could run closed loops on their own: write a failing test, implement the change, run the suite, and repeat until everything is green. A worker would report to the master only when it is done or has been blocked after N attempts. The master&apos;s progress view would then rest on objective signals (tests passing, commits made) rather than self-reported status. Multiple features could be built overnight this way.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Use headless mode (`claude -p`) or remote sessions for the workers, plus a hook that runs tests after each edit. Have each worker write its status to a shared JSON file that the master reads.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>Work on this feature autonomously using a test-driven loop. 1) Read the requirements and write failing tests that capture them, then commit with the message &apos;test: &lt;feature&gt;&apos;. 2) Implement the smallest change that could pass, run the full test suite, and read any failures carefully. 3) Repeat step 2 until all tests pass, for at most 8 iterations. If you hit that limit, stop and write a blocker summary. 4) After each iteration, append a line to .claude/status.json with the timestamp (JST), the iteration number, the pass/fail counts, and a one-line note. 5) When everything is green, run the linter and type checker, fix any issues, commit, and write a final status entry with state &apos;done&apos; and the commit hash so the master session can verify it.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+    </div>
+    
+
+    
+    <div class="fun-ending">
+      <div class="fun-headline">"Freshly crowned &apos;master session,&apos; Claude&apos;s first act of leadership was a status report it immediately had to walk back: it gave UTC times as Japan time and declared a desktop save never happened, when the source had simply been cut off."</div>
+      <div class="fun-detail">Single 1-hour session on 2026-11-18. The user promoted this session to coordinate the others and asked for project progress. Claude listed the sessions and summarized them, then corrected its own timezone and save-status errors without being prompted. The user&apos;s reaction wasn&apos;t recorded.</div>
+    </div>
+    
+
+    
+  </div>
+  <script>
+    function toggleCollapsible(header) {
+      header.classList.toggle('open');
+      const content = header.nextElementSibling;
+      content.classList.toggle('open');
+    }
+    function copyText(btn) {
+      const code = btn.previousElementSibling;
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+    function copyCmdItem(idx) {
+      const checkbox = document.getElementById('cmd-' + idx);
+      if (checkbox) {
+        const text = checkbox.dataset.text;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = checkbox.nextElementSibling.querySelector('.copy-btn');
+          if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
+        });
+      }
+    }
+    function copyAllCheckedClaudeMd() {
+      const checkboxes = document.querySelectorAll('.cmd-checkbox:checked');
+      const texts = [];
+      checkboxes.forEach(cb => {
+        if (cb.dataset.text) { texts.push(cb.dataset.text); }
+      });
+      const combined = texts.join('\n');
+      const btn = document.querySelector('.copy-all-btn');
+      if (btn) {
+        navigator.clipboard.writeText(combined).then(() => {
+          btn.textContent = 'Copied ' + texts.length + ' items!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy All Checked'; btn.classList.remove('copied'); }, 2000);
+        });
+      }
+    }
+    // Timezone selector for time of day chart (data is from our own analytics, not user input)
+    const rawHourCounts = {"11":4,"12":3};
+    function updateHourHistogram(offsetFromPT) {
+      const periods = [
+        { label: "Morning (6-12)", range: [6,7,8,9,10,11] },
+        { label: "Afternoon (12-18)", range: [12,13,14,15,16,17] },
+        { label: "Evening (18-24)", range: [18,19,20,21,22,23] },
+        { label: "Night (0-6)", range: [0,1,2,3,4,5] }
+      ];
+      const adjustedCounts = {};
+      for (const [hour, count] of Object.entries(rawHourCounts)) {
+        const newHour = (parseInt(hour) + offsetFromPT + 24) % 24;
+        adjustedCounts[newHour] = (adjustedCounts[newHour] || 0) + count;
+      }
+      const periodCounts = periods.map(p => ({
+        label: p.label,
+        count: p.range.reduce((sum, h) => sum + (adjustedCounts[h] || 0), 0)
+      }));
+      const maxCount = Math.max(...periodCounts.map(p => p.count)) || 1;
+      const container = document.getElementById('hour-histogram');
+      container.textContent = '';
+      periodCounts.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        const label = document.createElement('div');
+        label.className = 'bar-label';
+        label.textContent = p.label;
+        const track = document.createElement('div');
+        track.className = 'bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.style.width = (p.count / maxCount) * 100 + '%';
+        fill.style.background = '#8b5cf6';
+        track.appendChild(fill);
+        const value = document.createElement('div');
+        value.className = 'bar-value';
+        value.textContent = p.count;
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(value);
+        container.appendChild(row);
+      });
+    }
+    document.getElementById('timezone-select').addEventListener('change', function() {
+      const customInput = document.getElementById('custom-offset');
+      if (this.value === 'custom') {
+        customInput.style.display = 'inline-block';
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+        updateHourHistogram(parseInt(this.value));
+      }
+    });
+    document.getElementById('custom-offset').addEventListener('change', function() {
+      const parsed = parseInt(this.value, 10);
+      if (isNaN(parsed)) return;
+      updateHourHistogram(parsed + 8);
+    });
+  </script>
+</body>
+</html>
